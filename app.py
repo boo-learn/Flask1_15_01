@@ -45,7 +45,20 @@ def about():
 
 @app.route("/quotes")
 def get_quotes():
+    # return quotes, 200
     return quotes
+
+
+# quotes/1
+# quotes/3
+# quotes/5
+# quotes/10
+@app.route("/quotes/<int:quote_id>")
+def get_quote_by_id(quote_id):
+    for quote in quotes:
+        if quote["id"] == quote_id:
+            return quote, 200
+    return f"Quote with id={quote_id} not found", 404
 
 
 if __name__ == "__main__":
