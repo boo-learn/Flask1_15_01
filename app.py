@@ -77,5 +77,27 @@ def create_quote():
     return new_quote, 201
 
 
+@app.route("/quotes/<int:quote_id>", methods=['PUT'])
+def edit_quote(quote_id):
+    for quote in quotes:
+        if quote["id"] == quote_id:
+            new_data = request.json
+            if 'text' in new_data:
+                quote['text'] = new_data['text']
+            if 'author' in new_data:
+                quote['author'] = new_data['author']
+            return quote, 200
+    return f"Quote with id={quote_id} not found", 404
+
+
+@app.route("/quotes/<int:quote_id>", methods=['DELETE'])
+def delete_quote(quote_id):
+    for quote in quotes:
+        if quote["id"] == quote_id:
+            # TODO: реализовать удаление цитаты из списка
+            return "", 204
+    return f"Quote with id={quote_id} not found", 404
+
+
 if __name__ == "__main__":
     app.run(debug=True)
