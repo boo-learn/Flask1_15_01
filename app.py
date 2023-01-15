@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import random
 
 app = Flask(__name__)
@@ -62,9 +62,19 @@ def get_quote_by_id(quote_id):
     return f"Quote with id={quote_id} not found", 404
 
 
-@app.route("/quotes/random")
+@app.route("/quotes/random", methods=["GET"])
 def random_quote():
     return random.choice(quotes)
+
+
+@app.route("/quotes", methods=["POST"])
+def create_quote():
+    new_quote = request.json
+    last_quote = quotes[-1]
+    new_id = last_quote["id"] + 1
+    new_quote["id"] = new_id
+    quotes.append(new_quote)
+    return new_quote, 201
 
 
 if __name__ == "__main__":
