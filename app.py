@@ -1,4 +1,5 @@
 from flask import Flask
+import random
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -59,6 +60,11 @@ def get_quote_by_id(quote_id):
         if quote["id"] == quote_id:
             return quote, 200
     return f"Quote with id={quote_id} not found", 404
+
+
+@app.route("/quotes/random")
+def random_quote():
+    return random.choice(quotes)
 
 
 if __name__ == "__main__":
