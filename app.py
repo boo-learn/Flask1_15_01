@@ -43,5 +43,10 @@ def about():
     return about_me
 
 
+@app.route("/quotes")
+def get_quotes():
+    return quotes
+
+
 if __name__ == "__main__":
     app.run(debug=True)
