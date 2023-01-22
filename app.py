@@ -47,14 +47,10 @@ def get_quotes():
 # quotes/10
 @app.route("/quotes/<int:quote_id>")
 def get_quote_by_id(quote_id):
-    select_quote = "SELECT * FROM quotes WHERE id=?;"
-    cursor = get_db().cursor()
-    cursor.execute(select_quote, (quote_id,))
-    quote = cursor.fetchone()
+    quote = QuoteModel.query.get(quote_id)
     if quote is None:
         return f"Quote with id={quote_id} not found", 404
-    quote = convert_data(quote)
-    return quote, 200
+    return quote.to_dict(), 200
 
 
 @app.route("/quotes/random", methods=["GET"])
@@ -65,29 +61,24 @@ def random_quote():
 @app.route("/quotes", methods=["POST"])
 def create_quote():
     new_quote = request.json
-    create_quote_sql = """
-    INSERT INTO
-    quotes (author,text)
-    VALUES
-    (?, ?);
-    """
-    cursor = get_db().cursor()
-    cursor.execute(create_quote_sql, (new_quote['author'], new_quote['text']))
-    new_quote["id"] = cursor.lastrowid
-    return new_quote, 201
+    quote = QuoteModel(**new_quote)
+    db.session.add(quote)
+    db.session.commit()
+    return quote.to_dict(), 201
 
 
 @app.route("/quotes/<int:quote_id>", methods=['PUT'])
 def edit_quote(quote_id):
-    for quote in quotes:
-        if quote["id"] == quote_id:
-            new_data = request.json
-            if 'text' in new_data:
-                quote['text'] = new_data['text']
-            if 'author' in new_data:
-                quote['author'] = new_data['author']
-            return quote, 200
-    return f"Quote with id={quote_id} not found", 404
+    quote = QuoteModel.query.get(quote_id)
+    if quote is None:
+        return f"Quote with id={quote_id} not found", 404
+    new_data = request.json
+    if 'text' in new_data:
+        ...
+    if 'author' in new_data:
+        ...
+    db.session.commit()
+    return quote, 200
 
 
 @app.route("/quotes/<int:quote_id>", methods=['DELETE'])
