@@ -6,12 +6,9 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
 
-def convert_data(quotes):
+def convert_data(quote: tuple) -> dict:
     keys = ["id", "author", "text"]
-    quotes_dict = []
-    for quote in quotes:
-        quotes_dict.append(dict(zip(keys, quote)))
-    return quotes_dict
+    return dict(zip(keys, quote))
 
 
 @app.route("/")
@@ -31,7 +28,7 @@ def get_quotes():
     cursor = connection.cursor()
     cursor.execute(select_quotes)
     quotes = cursor.fetchall()
-    quotes = convert_data(quotes)
+    quotes = map(convert_data, quotes)
     cursor.close()
     connection.close()
     return quotes
@@ -43,10 +40,20 @@ def get_quotes():
 # quotes/10
 @app.route("/quotes/<int:quote_id>")
 def get_quote_by_id(quote_id):
-    for quote in quotes:
-        if quote["id"] == quote_id:
-            return quote, 200
-    return f"Quote with id={quote_id} not found", 404
+    select_quote = "SELECT * FROM quotes WHERE id=?;"
+    connection = sqlite3.connect("test.db")
+    cursor = connection.cursor()
+    cursor.execute(select_quote, (quote_id,))
+    quote = cursor.fetchone()
+    if quote is None:
+        return f"Quote with id={quote_id} not found", 404
+    quote = convert_data(quote)
+    cursor.close()
+    connection.close()
+    return quote, 200
+
+
+#
 
 
 @app.route("/quotes/random", methods=["GET"])
