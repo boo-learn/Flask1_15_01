@@ -1,37 +1,17 @@
 from flask import Flask, request
 import random
+import sqlite3
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
-about_me = {
-    "name": "Евгений",
-    "surname": "Юрченко",
-    "email": "eyurchenko@specialist.ru"
-}
 
-quotes = [
-    {
-        "id": 3,
-        "author": "Rick Cook",
-        "text": "Программирование сегодня — это гонка разработчиков программ, стремящихся писать программы с большей и лучшей идиотоустойчивостью, и вселенной, которая пытается создать больше отборных идиотов. Пока вселенная побеждает."
-    },
-    {
-        "id": 5,
-        "author": "Waldi Ravens",
-        "text": "Программирование на С похоже на быстрые танцы на только что отполированном полу людей с острыми бритвами в руках."
-    },
-    {
-        "id": 6,
-        "author": "Mosher’s Law of Software Engineering",
-        "text": "Не волнуйтесь, если что-то не работает. Если бы всё работало, вас бы уволили."
-    },
-    {
-        "id": 8,
-        "author": "Yoggi Berra",
-        "text": "В теории, теория и практика неразделимы. На практике это не так."
-    },
-]
+def convert_data(quotes):
+    keys = ["id", "author", "text"]
+    quotes_dict = []
+    for quote in quotes:
+        quotes_dict.append(dict(zip(keys, quote)))
+    return quotes_dict
 
 
 @app.route("/")
@@ -46,7 +26,14 @@ def about():
 
 @app.route("/quotes")
 def get_quotes():
-    # return quotes, 200
+    select_quotes = "SELECT * from quotes"
+    connection = sqlite3.connect("test.db")
+    cursor = connection.cursor()
+    cursor.execute(select_quotes)
+    quotes = cursor.fetchall()
+    quotes = convert_data(quotes)
+    cursor.close()
+    connection.close()
     return quotes
 
 
