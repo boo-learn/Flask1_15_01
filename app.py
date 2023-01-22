@@ -1,9 +1,26 @@
 from flask import Flask, request
 import random
 import sqlite3
+from flask import g
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+
+DATABASE = 'test.db'
+
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
 
 def convert_data(quote: tuple) -> dict:
@@ -24,13 +41,10 @@ def about():
 @app.route("/quotes")
 def get_quotes():
     select_quotes = "SELECT * from quotes"
-    connection = sqlite3.connect("test.db")
-    cursor = connection.cursor()
+    cursor = get_db().cursor()
     cursor.execute(select_quotes)
     quotes = cursor.fetchall()
-    quotes = map(convert_data, quotes)
-    cursor.close()
-    connection.close()
+    quotes = list(map(convert_data, quotes))
     return quotes
 
 
@@ -41,19 +55,13 @@ def get_quotes():
 @app.route("/quotes/<int:quote_id>")
 def get_quote_by_id(quote_id):
     select_quote = "SELECT * FROM quotes WHERE id=?;"
-    connection = sqlite3.connect("test.db")
-    cursor = connection.cursor()
+    cursor = get_db().cursor()
     cursor.execute(select_quote, (quote_id,))
     quote = cursor.fetchone()
-    cursor.close()
-    connection.close()
     if quote is None:
         return f"Quote with id={quote_id} not found", 404
     quote = convert_data(quote)
     return quote, 200
-
-
-#
 
 
 @app.route("/quotes/random", methods=["GET"])
@@ -70,12 +78,8 @@ def create_quote():
     VALUES
     (?, ?);
     """
-    connection = sqlite3.connect("test.db")
-    cursor = connection.cursor()
+    cursor = get_db().cursor()
     cursor.execute(create_quote_sql, (new_quote['author'], new_quote['text']))
-    connection.commit()
-    cursor.close()
-    connection.close()
     new_quote["id"] = cursor.lastrowid
     return new_quote, 201
 
