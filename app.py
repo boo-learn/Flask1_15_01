@@ -64,10 +64,19 @@ def random_quote():
 @app.route("/quotes", methods=["POST"])
 def create_quote():
     new_quote = request.json
-    last_quote = quotes[-1]
-    new_id = last_quote["id"] + 1
-    new_quote["id"] = new_id
-    quotes.append(new_quote)
+    create_quote_sql = """
+    INSERT INTO
+    quotes (author,text)
+    VALUES
+    (?, ?);
+    """
+    connection = sqlite3.connect("test.db")
+    cursor = connection.cursor()
+    cursor.execute(create_quote_sql, (new_quote['author'], new_quote['text']))
+    connection.commit()
+    cursor.close()
+    connection.close()
+    new_quote["id"] = cursor.lastrowid
     return new_quote, 201
 
 
