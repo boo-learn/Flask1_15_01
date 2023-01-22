@@ -1,51 +1,44 @@
 from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
 import random
 import sqlite3
+from pathlib import Path
 from flask import g
 
+BASE_DIR = Path(__file__).parent
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
-
-DATABASE = 'test.db'
-
-
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    return db
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{BASE_DIR / 'main.db'}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.app_context().push()
+db = SQLAlchemy(app)
 
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+class QuoteModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author = db.Column(db.String(32), unique=False)
+    text = db.Column(db.String(255), unique=False)
+
+    def __init__(self, author, text):
+        self.author = author
+        self.text = text
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "author": self.author,
+            "text": self.text
+        }
 
 
-def convert_data(quote: tuple) -> dict:
-    keys = ["id", "author", "text"]
-    return dict(zip(keys, quote))
-
-
-@app.route("/")
-def hello_world():
-    return "Hello, World!"
-
-
-@app.route("/about")
-def about():
-    return about_me
-
+# Сериализация:
+# Object --> dict --> JSON
 
 @app.route("/quotes")
 def get_quotes():
-    select_quotes = "SELECT * from quotes"
-    cursor = get_db().cursor()
-    cursor.execute(select_quotes)
-    quotes = cursor.fetchall()
-    quotes = list(map(convert_data, quotes))
-    return quotes
+    quotes = QuoteModel.query.all()
+    quotes_dict = [quote.to_dict() for quote in quotes]
+    return quotes_dict
 
 
 # quotes/1
