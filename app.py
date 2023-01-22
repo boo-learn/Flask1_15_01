@@ -45,11 +45,11 @@ def get_quote_by_id(quote_id):
     cursor = connection.cursor()
     cursor.execute(select_quote, (quote_id,))
     quote = cursor.fetchone()
+    cursor.close()
+    connection.close()
     if quote is None:
         return f"Quote with id={quote_id} not found", 404
     quote = convert_data(quote)
-    cursor.close()
-    connection.close()
     return quote, 200
 
 
