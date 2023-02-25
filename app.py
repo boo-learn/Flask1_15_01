@@ -35,16 +35,19 @@ class QuoteModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey(AuthorModel.id))
     text = db.Column(db.String(255), unique=False)
+    rate = db.Column(db.Integer, server_default="1", default="1", nullable=False)
 
-    def __init__(self, author, text):
+    def __init__(self, author, text, rate=1):
         self.author_id = author.id
         self.text = text
+        self.rate = rate
 
     def to_dict(self):
         return {
             "id": self.id,
             "text": self.text,
-            "author": self.author.to_dict()
+            "author": self.author.to_dict(),
+            "rate": self.rate,
         }
 
 
@@ -106,7 +109,7 @@ def random_quote():
 def create_quote(author_id):
     author = AuthorModel.query.get(author_id)
     new_quote = request.json
-    quote = QuoteModel(author, new_quote["text"])
+    quote = QuoteModel(author, **new_quote)
     db.session.add(quote)
     db.session.commit()
     return quote.to_dict(), 201
