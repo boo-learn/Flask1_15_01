@@ -19,15 +19,18 @@ migrate = Migrate(app, db)
 class AuthorModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), unique=True)
+    surname = db.Column(db.String(32))
     quotes = db.relationship('QuoteModel', backref='author', lazy='dynamic')
 
-    def __init__(self, name):
+    def __init__(self, name, surname):
         self.name = name
+        self.surname = surname
 
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.name
+            "name": self.name,
+            "surname": self.surname,
         }
 
 
@@ -52,9 +55,16 @@ class QuoteModel(db.Model):
 
 
 # AUTHORS
+# /authors  <--- all authors
+# /authors?surname=Ivanov  <-- authors with filter
 @app.route("/authors")
 def get_authors():
-    authors = AuthorModel.query.all()
+    surname = request.args.get("surname")
+    if surname:
+        authors = AuthorModel.query.filter_by(surname=surname)
+    else:
+        authors = AuthorModel.query.all()
+
     authors_dict = [author.to_dict() for author in authors]
     return authors_dict
 
