@@ -56,7 +56,7 @@ def get_authors():
     return authors_dict
 
 
-@app.route("/quotes/<int:author_id>")
+@app.route("/authors/<int:author_id>")
 def get_author_by_id(author_id):
     author = AuthorModel.query.get(author_id)
     if author is None:
