@@ -48,6 +48,25 @@ class QuoteModel(db.Model):
         }
 
 
+# AUTHORS
+@app.route("/authors")
+def get_authors():
+    authors = AuthorModel.query.all()
+    authors_dict = [author.to_dict() for author in authors]
+    return authors_dict
+
+
+@app.route("/authors", methods=["POST"])
+def create_author():
+    new_author = request.json
+    author = AuthorModel(**new_author)
+    db.session.add(author)
+    db.session.commit()
+    return author.to_dict(), 201
+
+
+# QUOTES
+
 # Сериализация:
 # Object --> dict --> JSON
 
