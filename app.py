@@ -56,6 +56,14 @@ def get_authors():
     return authors_dict
 
 
+@app.route("/quotes/<int:author_id>")
+def get_author_by_id(author_id):
+    author = AuthorModel.query.get(author_id)
+    if author is None:
+        return f"Author with id={author_id} not found", 404
+    return author.to_dict(), 200
+
+
 @app.route("/authors", methods=["POST"])
 def create_author():
     new_author = request.json
@@ -94,10 +102,11 @@ def random_quote():
     return random.choice(quotes)
 
 
-@app.route("/quotes", methods=["POST"])
-def create_quote():
+@app.route("/authors/<int:author_id>/quotes", methods=["POST"])
+def create_quote(author_id):
+    author = AuthorModel.query.get(author_id)
     new_quote = request.json
-    quote = QuoteModel(**new_quote)
+    quote = QuoteModel(author, new_quote["text"])
     db.session.add(quote)
     db.session.commit()
     return quote.to_dict(), 201
