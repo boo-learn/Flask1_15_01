@@ -16,23 +16,35 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-class QuoteModel(db.Model):
+class AuthorModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    author = db.Column(db.String(32), unique=False)
-    text = db.Column(db.String(255), unique=False)
-    rate = db.Column(db.Integer)
+    name = db.Column(db.String(32), unique=True)
+    quotes = db.relationship('QuoteModel', backref='author', lazy='dynamic')
 
-    def __init__(self, author, text, rate=1):
-        self.author = author
-        self.text = text
-        self.rate = rate
+    def __init__(self, name):
+        self.name = name
 
     def to_dict(self):
         return {
             "id": self.id,
-            "author": self.author,
+            "name": self.name
+        }
+
+
+class QuoteModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey(AuthorModel.id))
+    text = db.Column(db.String(255), unique=False)
+
+    def __init__(self, author, text):
+        self.author_id = author.id
+        self.text = text
+
+    def to_dict(self):
+        return {
+            "id": self.id,
             "text": self.text,
-            "rate": self.rate
+            "author": self.author.to_dict()
         }
 
 
